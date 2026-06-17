@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import type { JDSectioned, Language } from '../types'
 import { generateJobDescription } from '../lib/aiProvider'
-import { exportJDToDocx } from '../lib/docxExporter'
+import { exportJDToDocx, brandName } from '../lib/docxExporter'
 import { jdToPlainText } from '../lib/formatters'
 import { copyToClipboard } from '../lib/clipboard'
 import { OutputActions } from './OutputActions'
@@ -13,13 +13,15 @@ export function JDPanel({ onJDGenerated }: { onJDGenerated: (text: string) => vo
   const [cargo, setCargo] = useState('')
   const [cliente, setCliente] = useState('')
   const [idioma, setIdioma] = useState<Language>('pt-BR')
-  const [brand, setBrand] = useState('Recruitment AI Workbench')
   const [especificidades, setEspecificidades] = useState('')
   const [additionalContext, setAdditionalContext] = useState('')
   const [status, setStatus] = useState<Status>('idle')
   const [statusMsg, setStatusMsg] = useState('')
   const [jd, setJd] = useState<JDSectioned | null>(null)
   const jdText = jd ? jdToPlainText(jd) : ''
+
+  // Marca sempre automática: PT-BR = Insi | EN = Insi North América
+  const brand = brandName(idioma)
 
   const generate = useCallback(async () => {
     if (!cargo.trim() || !cliente.trim()) {
@@ -60,10 +62,6 @@ export function JDPanel({ onJDGenerated }: { onJDGenerated: (text: string) => vo
             <option value="en">English</option>
           </select>
         </label>
-        <label>
-          Marca / identificador final
-          <input value={brand} onChange={(e) => setBrand(e.target.value)} />
-        </label>
         <label className="span-2">
           Especificidades
           <textarea value={especificidades} onChange={(e) => setEspecificidades(e.target.value)} rows={4} placeholder="Stack, modelo de trabalho, diferenciais..." />
@@ -87,7 +85,7 @@ export function JDPanel({ onJDGenerated }: { onJDGenerated: (text: string) => vo
           <OutputActions
             text={jdText}
             onCopy={async () => { await copyToClipboard(jdText); setStatusMsg('Copiado.'); setStatus('success') }}
-            onDownload={() => exportJDToDocx(jd!, cliente)}
+            onDownload={() => exportJDToDocx(jd!, cliente, idioma)}
             onSendToOthers={() => { onJDGenerated(jdText); setStatusMsg('JD enviada para as outras abas.'); setStatus('success') }}
           />
           <pre className="output">{jdText}</pre>
