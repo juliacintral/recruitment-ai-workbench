@@ -9,29 +9,31 @@ import {
 } from 'docx'
 import { saveAs } from 'file-saver'
 import type { JDSectioned, Language } from '../types'
-
-// Import direto via Vite — garante que a imagem é embutida no bundle
-// e nunca depende de fetch em runtime (resolve o problema do nome com espaços)
 import logoUrl from '../../public/Logo_Insi_logo_Positivo_Color_SemFundo (1).png'
+
+// Cor roxo escuro Insi — aplicada em todos os títulos e subtítulos
+const PURPLE = '3B0077'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+/** H2: seções principais — roxo escuro, bold, borda inferior roxa */
 function h2(text: string): Paragraph {
   return new Paragraph({
     heading: HeadingLevel.HEADING_2,
-    children: [new TextRun({ text, bold: true, size: 26, color: '2E2E2E' })],
-    spacing: { before: 280, after: 120 },
+    children: [new TextRun({ text, bold: true, size: 28, color: PURPLE })],
+    spacing: { before: 300, after: 120 },
     border: {
-      bottom: { style: BorderStyle.SINGLE, size: 4, color: '3B0077', space: 4 }
+      bottom: { style: BorderStyle.SINGLE, size: 4, color: PURPLE, space: 4 }
     }
   })
 }
 
+/** H3: subseções (Platform, Scope, Implementation & Development etc.) */
 function h3(text: string): Paragraph {
   return new Paragraph({
     heading: HeadingLevel.HEADING_3,
-    children: [new TextRun({ text, bold: true, size: 22, color: '3B0077' })],
-    spacing: { before: 160, after: 80 }
+    children: [new TextRun({ text, bold: true, size: 24, color: PURPLE })],
+    spacing: { before: 180, after: 80 }
   })
 }
 
@@ -53,7 +55,6 @@ function para(text: string, spaceAfter = 120): Paragraph {
   })
 }
 
-/** Carrega a logo via URL do Vite (já resolvida no build) e retorna Uint8Array */
 async function loadLogoBytes(): Promise<Uint8Array> {
   const res = await fetch(logoUrl)
   const buf = await res.arrayBuffer()
@@ -75,24 +76,24 @@ export async function exportJDToDocx(
   const brand = brandName(idioma)
   const children: Paragraph[] = []
 
-  // ── Logo Insi (obrigatória) ──
+  // ── Logo Insi — 220x74 para boa visualização ──
   children.push(
     new Paragraph({
       children: [
         new ImageRun({
           data: logoBytes,
-          transformation: { width: 130, height: 44 },
+          transformation: { width: 220, height: 74 },
           type: 'png'
         })
       ],
-      spacing: { after: 360 }
+      spacing: { after: 400 }
     })
   )
 
-  // ── Título da vaga ──
+  // ── Título da vaga — roxo escuro, bold ──
   children.push(
     new Paragraph({
-      children: [new TextRun({ text: data.title, bold: true, size: 40, color: '1A1A1A' })],
+      children: [new TextRun({ text: data.title, bold: true, size: 44, color: PURPLE })],
       spacing: { after: 320 }
     })
   )
@@ -149,11 +150,11 @@ export async function exportJDToDocx(
     children.push(para(p))
   }
 
-  // ── Linha final ──
+  // ── Linha final — roxo escuro ──
   const footerLine = `${clientName} -- ${data.title} -- ${brand}`
   children.push(
     new Paragraph({
-      children: [new TextRun({ text: footerLine, bold: true, size: 20, color: '1A1A1A' })],
+      children: [new TextRun({ text: footerLine, bold: true, size: 20, color: PURPLE })],
       spacing: { before: 400, after: 0 }
     })
   )
