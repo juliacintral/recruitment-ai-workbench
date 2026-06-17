@@ -16,22 +16,24 @@ Web app de recrutamento com 3 módulos de IA: **Job Description**, **Roteiro Té
 
 - React 18 + TypeScript + Vite
 - `docx` + `file-saver` para exportação .docx no browser
-- Netlify Functions como proxy da OpenAI API (a chave fica no servidor)
+- Netlify Functions como proxy da **Groq API** (chave no servidor, nunca exposta)
+- Modelo: `meta-llama/llama-4-scout-17b-16e-instruct` (gratuito, sem cartão)
 
 ## Rodar localmente
 
 ```bash
 npm install
-npm run dev
 ```
 
 Crie um arquivo `.env` com:
 
 ```
-OPENAI_API_KEY=sk-...
+GROQ_API_KEY=gsk_...
 ```
 
-Para testar as Netlify Functions localmente, instale e use o CLI da Netlify:
+Obtenha sua chave gratuita em: https://console.groq.com
+
+Para testar as Netlify Functions localmente:
 
 ```bash
 npm install -g netlify-cli
@@ -44,7 +46,10 @@ nlf dev
 1. Conecte este repositório no [Netlify](https://app.netlify.com/).
 2. Build command: `npm run build`
 3. Publish directory: `dist`
-4. Adicione a variável de ambiente `OPENAI_API_KEY` nas configurações do site.
+4. Em **Environment variables**, adicione:
+   ```
+   GROQ_API_KEY = gsk_...
+   ```
 5. Deploy!
 
 ## Estrutura
@@ -54,11 +59,11 @@ src/
   components/     # Tabs, JDPanel, InterviewPanel, OutreachPanel, StatusBadge, OutputActions
   lib/            # aiProvider, docxExporter, formatters, clipboard
   prompts.ts      # Prompts mestres de cada módulo
-  schemas.ts      # JSON Schemas para Structured Outputs da OpenAI
+  schemas.ts      # JSON Schemas para Structured Outputs
   types.ts        # Tipos TypeScript
 netnlify/
   functions/
-    ai-proxy.ts   # Proxy serverless que chama a OpenAI com a chave do servidor
+    ai-proxy.ts   # Proxy serverless que chama a Groq API com a chave do servidor
 ```
 
 ---
