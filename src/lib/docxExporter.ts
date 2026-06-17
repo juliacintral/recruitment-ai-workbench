@@ -10,6 +10,10 @@ import {
 import { saveAs } from 'file-saver'
 import type { JDSectioned, Language } from '../types'
 
+// Import direto via Vite — garante que a imagem é embutida no bundle
+// e nunca depende de fetch em runtime (resolve o problema do nome com espaços)
+import logoUrl from '../../public/Logo_Insi_logo_Positivo_Color_SemFundo (1).png'
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function h2(text: string): Paragraph {
@@ -49,16 +53,11 @@ function para(text: string, spaceAfter = 120): Paragraph {
   })
 }
 
-/** Carrega a logo Insi do /public — nome exato do arquivo subido */
-async function loadLogo(): Promise<Uint8Array | null> {
-  try {
-    const res = await fetch('/Logo_Insi_logo_Positivo_Color_SemFundo (1).png')
-    if (!res.ok) return null
-    const buf = await res.arrayBuffer()
-    return new Uint8Array(buf)
-  } catch {
-    return null
-  }
+/** Carrega a logo via URL do Vite (já resolvida no build) e retorna Uint8Array */
+async function loadLogoBytes(): Promise<Uint8Array> {
+  const res = await fetch(logoUrl)
+  const buf = await res.arrayBuffer()
+  return new Uint8Array(buf)
 }
 
 export function brandName(idioma: Language): string {
@@ -72,41 +71,25 @@ export async function exportJDToDocx(
   clientName: string,
   idioma: Language
 ) {
-  const logo = await loadLogo()
+  const logoBytes = await loadLogoBytes()
   const brand = brandName(idioma)
   const children: Paragraph[] = []
 
-  // ── Logo ──
-  if (logo) {
-    children.push(
-      new Paragraph({
-        children: [
-          new ImageRun({
-            data: logo,
-            transformation: { width: 130, height: 44 },
-            type: 'png'
-          })
-        ],
-        spacing: { after: 360 }
-      })
-    )
-  } else {
-    children.push(
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: 'insi  digital. simple. human.',
-            bold: true,
-            color: '3B0077',
-            size: 26
-          })
-        ],
-        spacing: { after: 360 }
-      })
-    )
-  }
+  // ── Logo Insi (obrigatória) ──
+  children.push(
+    new Paragraph({
+      children: [
+        new ImageRun({
+          data: logoBytes,
+          transformation: { width: 130, height: 44 },
+          type: 'png'
+        })
+      ],
+      spacing: { after: 360 }
+    })
+  )
 
-  // ── Título ──
+  // ── Título da vaga ──
   children.push(
     new Paragraph({
       children: [new TextRun({ text: data.title, bold: true, size: 40, color: '1A1A1A' })],
