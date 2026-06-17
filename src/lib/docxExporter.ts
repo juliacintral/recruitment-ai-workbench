@@ -1,32 +1,21 @@
 import {
-  AlignmentType,
   BorderStyle,
   Document,
   HeadingLevel,
   ImageRun,
   Packer,
   Paragraph,
-  TextRun,
-  UnderlineType
+  TextRun
 } from 'docx'
 import { saveAs } from 'file-saver'
-import type { JDSectioned } from '../types'
-import type { Language } from '../types'
+import type { JDSectioned, Language } from '../types'
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/** Fidelidade ao Modelo-JD: H2 bold + underline, espaçamento before 280 after 120 */
 function h2(text: string): Paragraph {
   return new Paragraph({
     heading: HeadingLevel.HEADING_2,
-    children: [
-      new TextRun({
-        text,
-        bold: true,
-        size: 26,
-        color: '2E2E2E'
-      })
-    ],
+    children: [new TextRun({ text, bold: true, size: 26, color: '2E2E2E' })],
     spacing: { before: 280, after: 120 },
     border: {
       bottom: { style: BorderStyle.SINGLE, size: 4, color: '3B0077', space: 4 }
@@ -34,7 +23,6 @@ function h2(text: string): Paragraph {
   })
 }
 
-/** H3 para subseções: Implementation & Development, Platform, Scope etc */
 function h3(text: string): Paragraph {
   return new Paragraph({
     heading: HeadingLevel.HEADING_3,
@@ -43,7 +31,6 @@ function h3(text: string): Paragraph {
   })
 }
 
-/** Bullet fiel ao modelo: espaçamento after 80 */
 function bullets(items: string[]): Paragraph[] {
   return items.map(
     (item) =>
@@ -55,7 +42,6 @@ function bullets(items: string[]): Paragraph[] {
   )
 }
 
-/** Parágrafo de texto corrido */
 function para(text: string, spaceAfter = 120): Paragraph {
   return new Paragraph({
     children: [new TextRun({ text, size: 22 })],
@@ -63,10 +49,10 @@ function para(text: string, spaceAfter = 120): Paragraph {
   })
 }
 
-/** Tenta carregar a logo Insi do /public. Se falhar, retorna null. */
+/** Carrega a logo Insi do /public — nome exato do arquivo subido */
 async function loadLogo(): Promise<Uint8Array | null> {
   try {
-    const res = await fetch('/logo-insi.jpg')
+    const res = await fetch('/Logo_Insi_logo_Positivo_Color_SemFundo (1).png')
     if (!res.ok) return null
     const buf = await res.arrayBuffer()
     return new Uint8Array(buf)
@@ -75,12 +61,11 @@ async function loadLogo(): Promise<Uint8Array | null> {
   }
 }
 
-/** Regra de marca: PT-BR = Insi | EN = Insi North América */
 export function brandName(idioma: Language): string {
   return idioma === 'pt-BR' ? 'Insi' : 'Insi North América'
 }
 
-// ─── Exportador principal ────────────────────────────────────────────────────
+// ─── Exportador principal ─────────────────────────────────────────────────────
 
 export async function exportJDToDocx(
   data: JDSectioned,
@@ -99,14 +84,13 @@ export async function exportJDToDocx(
           new ImageRun({
             data: logo,
             transformation: { width: 130, height: 44 },
-            type: 'jpg'
+            type: 'png'
           })
         ],
         spacing: { after: 360 }
       })
     )
   } else {
-    // Fallback visual caso a imagem não carregue
     children.push(
       new Paragraph({
         children: [
@@ -122,17 +106,10 @@ export async function exportJDToDocx(
     )
   }
 
-  // ── Título da vaga ── (bold, grande, fiel ao modelo)
+  // ── Título ──
   children.push(
     new Paragraph({
-      children: [
-        new TextRun({
-          text: data.title,
-          bold: true,
-          size: 40,
-          color: '1A1A1A'
-        })
-      ],
+      children: [new TextRun({ text: data.title, bold: true, size: 40, color: '1A1A1A' })],
       spacing: { after: 320 }
     })
   )
@@ -143,7 +120,6 @@ export async function exportJDToDocx(
 
   // ── Role Overview ──
   children.push(h2('Role Overview'))
-  // Pode ter múltiplos parágrafos (quebra por \n\n)
   for (const p of data.roleOverview.split(/\n{2,}/).filter(Boolean)) {
     children.push(para(p))
   }
@@ -190,18 +166,11 @@ export async function exportJDToDocx(
     children.push(para(p))
   }
 
-  // ── Linha final (fiel ao modelo: bold, ex: Raymond James -- ServiceNow FSO Specialist -- Insi North America) ──
+  // ── Linha final ──
   const footerLine = `${clientName} -- ${data.title} -- ${brand}`
   children.push(
     new Paragraph({
-      children: [
-        new TextRun({
-          text: footerLine,
-          bold: true,
-          size: 20,
-          color: '1A1A1A'
-        })
-      ],
+      children: [new TextRun({ text: footerLine, bold: true, size: 20, color: '1A1A1A' })],
       spacing: { before: 400, after: 0 }
     })
   )
@@ -209,16 +178,13 @@ export async function exportJDToDocx(
   const doc = new Document({
     styles: {
       default: {
-        document: {
-          run: { font: 'Calibri', size: 22, color: '2E2E2E' }
-        }
+        document: { run: { font: 'Calibri', size: 22, color: '2E2E2E' } }
       }
     },
     sections: [{ children }]
   })
 
   const blob = await Packer.toBlob(doc)
-  const filename =
-    data.title.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_') + '.docx'
+  const filename = data.title.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_') + '.docx'
   saveAs(blob, filename)
 }
