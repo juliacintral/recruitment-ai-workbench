@@ -2,46 +2,48 @@ import type { Language } from './types'
 
 const lang = (l: Language) => (l === 'pt-BR' ? 'Português do Brasil' : 'English')
 
+/** Regra de marca: PT-BR = Insi | EN = Insi North América */
+export const brandName = (idioma: Language): string =>
+  idioma === 'pt-BR' ? 'Insi' : 'Insi North América'
+
 export function buildJDPrompt(input: {
   cargo: string
   idioma: Language
   cliente: string
-  brand: string
   especificidades?: string
   additionalContext?: string
 }) {
+  const brand = brandName(input.idioma)
+
   return `
 Você é um especialista sênior em recrutamento técnico e escrita de job descriptions consultivas.
 
 Crie uma Job Description completa, madura e altamente específica.
 
-Siga esta estrutura obrigatória:
-1. Título da vaga
-2. Location
-3. Role Overview
-4. Key Responsibilities
-5. Technical Environment
-6. Required Qualifications
-7. Nice to Have
-8. Project Context
-9. Linha final com [Cliente] -- [Cargo] -- [Identificação]
+Siga esta estrutura obrigatória e gere EXATAMENTE estes campos JSON:
+1. title — nome da vaga
+2. location — ex: "Brazil - Nearshore" ou "Remote - LATAM"
+3. roleOverview — 2 parágrafos descrevendo o papel
+4. keyResponsibilities — array de blocos temáticos com theme + items (ex: Implementation & Development, Subject Matter Expertise, Operational Support)
+5. technicalEnvironment — com platform[], scope[] e additional[]
+6. requiredQualifications — array de strings
+7. niceToHave — array de strings
+8. projectContext — 2-3 bullets ou parágrafo
+9. footerLine — EXATAMENTE no formato: "${input.cliente} -- {title} -- ${brand}"
 
 Regras:
-- Seja específico.
+- Seja específico e técnico.
 - Não use frases genéricas e vazias.
 - Escreva como recrutador experiente.
 - Se faltarem dados, faça inferências realistas.
-- Organize responsabilidades por blocos temáticos.
-- Em Key Responsibilities, use blocos como: Implementation & Development, Subject Matter Expertise, Operational Support.
-- Em Technical Environment, use subseções como Platform e Scope quando fizer sentido.
 - Tom enterprise e consultivo.
-- Não escreva explicações fora da estrutura.
+- footerLine deve seguir o padrão: [Cliente] -- [Cargo] -- [Marca]
+- A marca é SEMPRE "${brand}" — não altere isso.
 
 Idioma: ${lang(input.idioma)}
 
 Cargo: ${input.cargo}
 Cliente: ${input.cliente}
-Identificação final: ${input.brand}
 Especificidades: ${input.especificidades || 'N/A'}
 Contexto adicional: ${input.additionalContext || 'N/A'}
 `.trim()
