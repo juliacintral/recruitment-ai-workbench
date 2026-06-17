@@ -4,7 +4,15 @@ import { interviewSchema, jdSchema, outreachSchema } from '../schemas'
 
 const API_BASE = '/api/ai-proxy'
 
-async function callProxy(body: object): Promise<any> {
+// Schema definition shape — usamos unknown para evitar conflito com
+// tipos estrítos do TypeScript ao passar objetos JSON Schema inline
+type SchemaDef = {
+  name: string
+  strict: boolean
+  schema: unknown
+}
+
+async function callProxy(body: Record<string, unknown>): Promise<any> {
   const res = await fetch(API_BASE, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -17,7 +25,7 @@ async function callProxy(body: object): Promise<any> {
   return res.json()
 }
 
-async function structuredCall<T>(prompt: string, schemaDef: typeof jdSchema): Promise<T> {
+async function structuredCall<T>(prompt: string, schemaDef: SchemaDef): Promise<T> {
   const data = await callProxy({
     model: 'gpt-4o-mini',
     input: [{ role: 'user', content: prompt }],
@@ -26,7 +34,7 @@ async function structuredCall<T>(prompt: string, schemaDef: typeof jdSchema): Pr
         type: 'json_schema',
         name: schemaDef.name,
         strict: schemaDef.strict,
-        schema: schemaDef.schema
+        schema: schemaDef.schema as Record<string, unknown>
       }
     }
   })
@@ -49,7 +57,7 @@ export async function generateJobDescription(input: {
   especificidades?: string
   additionalContext?: string
 }): Promise<JDSectioned> {
-  return structuredCall<JDSectioned>(buildJDPrompt(input), jdSchema)
+  return structuredCall<JDSectioned>(buildJDPrompt(input), jdSchema as SchemaDef)
 }
 
 export async function generateInterviewGuide(input: {
@@ -57,7 +65,7 @@ export async function generateInterviewGuide(input: {
   foco?: string
   jobDescription: string
 }): Promise<InterviewGuide> {
-  return structuredCall<InterviewGuide>(buildInterviewPrompt(input), interviewSchema)
+  return structuredCall<InterviewGuide>(buildInterviewPrompt(input), interviewSchema as SchemaDef)
 }
 
 export async function generateLinkedinOutreach(input: {
@@ -65,7 +73,7 @@ export async function generateLinkedinOutreach(input: {
   persona?: string
   jobDescription: string
 }): Promise<OutreachOutput> {
-  return structuredCall<OutreachOutput>(buildOutreachPrompt(input), outreachSchema)
+  return structuredCall<OutreachOutput>(buildOutreachPrompt(input), outreachSchema as SchemaDef)
 }
 
 export async function generateInterviewText(input: {
