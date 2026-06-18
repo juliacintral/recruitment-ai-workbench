@@ -3,77 +3,96 @@ import type { Language } from '../types'
 import { generateInterviewGuide } from '../lib/aiProvider'
 import { interviewToPlainText } from '../lib/formatters'
 import { copyToClipboard } from '../lib/clipboard'
-import { OutputActions } from './OutputActions'
 import { StatusBadge } from './StatusBadge'
 
 type Status = 'idle' | 'loading' | 'success' | 'error'
 
+type LangState = { status: Status; msg: string; text: string }
+const initLang = (): LangState => ({ status: 'idle', msg: '', text: '' })
+
 export function InterviewPanel({ sharedBase }: { sharedBase: string }) {
   const [base, setBase] = useState('')
-  const [idioma, setIdioma] = useState<Language>('pt-BR')
   const [foco, setFoco] = useState('')
-  const [status, setStatus] = useState<Status>('idle')
-  const [statusMsg, setStatusMsg] = useState('')
-  const [output, setOutput] = useState('')
+  const [pt, setPt] = useState<LangState>(initLang())
+  const [en, setEn] = useState<LangState>(initLang())
 
   const effectiveBase = base.trim() || sharedBase
 
-  const generate = useCallback(async () => {
-    if (!effectiveBase) { setStatus('error'); setStatusMsg('Informe uma JD ou use a aba Job Description primeiro.'); return }
-    setStatus('loading')
-    setStatusMsg('Gerando roteiro técnico...')
-    setOutput('')
+  const generate = useCallback(async (idioma: Language) => {
+    if (!effectiveBase) {
+      const msg = 'Informe uma JD ou use a aba Job Description primeiro.'
+      if (idioma === 'pt-BR') setPt(s => ({ ...s, status: 'error', msg }))
+      else setEn(s => ({ ...s, status: 'error', msg }))
+      return
+    }
+    const set = idioma === 'pt-BR' ? setPt : setEn
+    set({ status: 'loading', msg: 'Gerando roteiro...', text: '' })
     try {
       const result = await generateInterviewGuide({ idioma, foco, jobDescription: effectiveBase })
       const text = interviewToPlainText(result)
-      setOutput(text)
-      setStatus('success')
-      setStatusMsg('Roteiro gerado com sucesso.')
+      set({ status: 'success', msg: 'Roteiro gerado.', text })
     } catch (err: any) {
-      setStatus('error')
-      setStatusMsg(err?.message || 'Erro ao gerar o roteiro.')
+      set({ status: 'error', msg: err?.message || 'Erro ao gerar o roteiro.', text: '' })
     }
-  }, [effectiveBase, idioma, foco])
+  }, [effectiveBase, foco])
+
+  const hasAny = pt.text || en.text
 
   return (
     <section className="panel">
       {sharedBase && !base && (
         <div className="shared-notice">✓ Usando JD gerada na aba anterior. Ou cole uma diferente abaixo.</div>
       )}
+
       <div className="grid">
         <label className="span-2">
           JD ou contexto da vaga
-          <textarea value={base} onChange={(e) => setBase(e.target.value)} rows={8} placeholder="Cole a JD aqui ou deixe vazio para usar a JD gerada na aba anterior." />
+          <textarea value={base} onChange={e => setBase(e.target.value)} rows={8} placeholder="Cole a JD aqui ou deixe vazio para usar a JD gerada na aba anterior." />
         </label>
-        <label>
-          Idioma
-          <select value={idioma} onChange={(e) => setIdioma(e.target.value as Language)}>
-            <option value="pt-BR">Português</option>
-            <option value="en">English</option>
-          </select>
-        </label>
-        <label>
+        <label className="span-2">
           Foco adicional
-          <input value={foco} onChange={(e) => setFoco(e.target.value)} placeholder="Ex.: system design, troubleshooting, liderança técnica" />
+          <input value={foco} onChange={e => setFoco(e.target.value)} placeholder="Ex.: system design, troubleshooting, liderança técnica" />
         </label>
       </div>
 
       <div className="actions">
-        <button className="btn btn-primary" onClick={generate} disabled={status === 'loading' || !effectiveBase}>
-          {status === 'loading' ? 'Gerando...' : 'Gerar roteiro'}
+        <button className="btn btn-primary" onClick={() => generate('pt-BR')} disabled={pt.status === 'loading' || !effectiveBase}>
+          {pt.status === 'loading' ? 'Gerando PT...' : '🇧🇷 Gerar roteiro em Português'}
+        </button>
+        <button className="btn btn-secondary" onClick={() => generate('en')} disabled={en.status === 'loading' || !effectiveBase}>
+          {en.status === 'loading' ? 'Generating EN...' : '🇺🇸 Generate guide in English'}
         </button>
       </div>
 
-      <StatusBadge status={status} message={statusMsg} />
+      {hasAny && (
+        <div style={{ display: 'grid', gridTemplateColumns: pt.text && en.text ? '1fr 1fr' : '1fr', gap: '16px', marginTop: '16px' }}>
 
-      {output && (
-        <>
-          <OutputActions
-            text={output}
-            onCopy={async () => { await copyToClipboard(output); setStatusMsg('Copiado.'); setStatus('success') }}
-          />
-          <pre className="output">{output}</pre>
-        </>
+          {pt.text && (
+            <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius)', background: 'var(--bg)', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#1a7f3c' }}>
+                🇧🇷 Português
+              </div>
+              <StatusBadge status={pt.status} message={pt.msg} />
+              <div className="actions" style={{ margin: 0 }}>
+                <button className="btn btn-sm" onClick={() => copyToClipboard(pt.text)}>Copiar PT</button>
+              </div>
+              <pre className="output" style={{ margin: 0 }}>{pt.text}</pre>
+            </div>
+          )}
+
+          {en.text && (
+            <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius)', background: 'var(--bg)', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#1a4fa0' }}>
+                🇺🇸 English
+              </div>
+              <StatusBadge status={en.status} message={en.msg} />
+              <div className="actions" style={{ margin: 0 }}>
+                <button className="btn btn-sm" onClick={() => copyToClipboard(en.text)}>Copy EN</button>
+              </div>
+              <pre className="output" style={{ margin: 0 }}>{en.text}</pre>
+            </div>
+          )}
+        </div>
       )}
     </section>
   )

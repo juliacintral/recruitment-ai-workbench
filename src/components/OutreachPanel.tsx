@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { generateLinkedinOutreach } from '../lib/aiProvider'
 import { outreachToPlainText } from '../lib/formatters'
+import { copyToClipboard } from '../lib/clipboard'
 
 type Status = 'idle' | 'loading' | 'success' | 'error'
 
@@ -13,11 +14,6 @@ function CharCount({ text, limit }: { text: string; limit: number }) {
   )
 }
 
-async function copyText(text: string) {
-  try { await navigator.clipboard.writeText(text) } catch {}
-}
-
-// Renderiza texto com \n\n como parágrafos e linhas "- " como bullets
 function MessageRenderer({ text }: { text: string }) {
   const blocks = text.split(/\n{2,}/)
   return (
@@ -28,62 +24,72 @@ function MessageRenderer({ text }: { text: string }) {
         if (allBullets) {
           return (
             <ul key={i} style={{ margin: '0 0 14px 0', paddingLeft: '20px' }}>
-              {lines.map((l, j) => (
-                <li key={j} style={{ marginBottom: '4px' }}>{l.replace(/^- /, '')}</li>
-              ))}
+              {lines.map((l, j) => <li key={j} style={{ marginBottom: '4px' }}>{l.replace(/^- /, '')}</li>)}
             </ul>
           )
         }
-        return (
-          <p key={i} style={{ margin: '0 0 14px 0' }}>
-            {lines.join(' ')}
-          </p>
-        )
+        return <p key={i} style={{ margin: '0 0 14px 0' }}>{lines.join(' ')}</p>
       })}
     </div>
   )
 }
 
+type LangResult = { message: string; note: string }
+type LangState = { status: Status; msg: string; result: LangResult | null }
+const initLang = (): LangState => ({ status: 'idle', msg: '', result: null })
+
 export function OutreachPanel({ sharedBase }: { sharedBase: string }) {
   const [base, setBase] = useState('')
   const [candidateName, setCandidateName] = useState('')
   const [profileInfo, setProfileInfo] = useState('')
-  const [status, setStatus] = useState<Status>('idle')
-  const [statusMsg, setStatusMsg] = useState('')
-  const [messagePT, setMessagePT] = useState('')
-  const [messageEN, setMessageEN] = useState('')
-  const [notePT, setNotePT] = useState('')
-  const [noteEN, setNoteEN] = useState('')
+  const [pt, setPt] = useState<LangState>(initLang())
+  const [en, setEn] = useState<LangState>(initLang())
 
   const effectiveBase = base.trim() || sharedBase
-  const hasOutput = messagePT && messageEN
 
-  const generate = useCallback(async () => {
+  // Gera apenas o idioma clicado
+  const generate = useCallback(async (lang: 'pt' | 'en') => {
     if (!effectiveBase) {
-      setStatus('error')
-      setStatusMsg('Informe uma JD ou gere uma na aba Job Description.')
+      const msg = 'Informe uma JD ou gere uma na aba Job Description.'
+      if (lang === 'pt') setPt(s => ({ ...s, status: 'error', msg }))
+      else setEn(s => ({ ...s, status: 'error', msg }))
       return
     }
-    setStatus('loading')
-    setStatusMsg('Gerando abordagens PT e EN...')
-    setMessagePT(''); setMessageEN(''); setNotePT(''); setNoteEN('')
+    const set = lang === 'pt' ? setPt : setEn
+    set({ status: 'loading', msg: 'Gerando...', result: null })
     try {
       const result = await generateLinkedinOutreach({
         candidateName: candidateName.trim() || undefined,
         profileInfo: profileInfo.trim() || undefined,
         jobDescription: effectiveBase
       })
-      setMessagePT(result.messagePT)
-      setMessageEN(result.messageEN)
-      setNotePT(result.notePT)
-      setNoteEN(result.noteEN)
-      setStatus('success')
-      setStatusMsg('Abordagens geradas com sucesso.')
+      // Usa apenas os campos do idioma solicitado
+      set({
+        status: 'success',
+        msg: 'Abordagem gerada.',
+        result: lang === 'pt'
+          ? { message: result.messagePT, note: result.notePT }
+          : { message: result.messageEN, note: result.noteEN }
+      })
     } catch (err: any) {
-      setStatus('error')
-      setStatusMsg(err?.message || 'Erro ao gerar abordagem.')
+      set({ status: 'error', msg: err?.message || 'Erro ao gerar.', result: null })
     }
   }, [effectiveBase, candidateName, profileInfo])
+
+  const hasPT = pt.result !== null
+  const hasEN = en.result !== null
+  const hasAny = hasPT || hasEN
+
+  const allText = (hasPT && hasEN)
+    ? outreachToPlainText({
+        messagePT: pt.result!.message,
+        messageEN: en.result!.message,
+        notePT: pt.result!.note,
+        noteEN: en.result!.note
+      })
+    : hasPT
+      ? `MENSAGEM PT\n${pt.result!.message}\n\nNOTA PT\n${pt.result!.note}`
+      : `MESSAGE EN\n${en.result!.message}\n\nNOTE EN\n${en.result!.note}`
 
   return (
     <section className="panel">
@@ -94,104 +100,97 @@ export function OutreachPanel({ sharedBase }: { sharedBase: string }) {
       <div className="grid">
         <label className="span-2">
           JD ou contexto da vaga
-          <textarea
-            value={base}
-            onChange={e => setBase(e.target.value)}
-            rows={7}
-            placeholder="Cole a JD aqui ou deixe vazio para usar a JD gerada na aba anterior."
-          />
+          <textarea value={base} onChange={e => setBase(e.target.value)} rows={7}
+            placeholder="Cole a JD aqui ou deixe vazio para usar a JD gerada na aba anterior." />
         </label>
         <label>
           Nome do candidato
-          <span style={{ fontSize: '11px', fontWeight: 400, color: 'var(--muted)', textTransform: 'none', letterSpacing: 0 }}> (opcional)</span>
+          <span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 400 }}> (opcional)</span>
           <input value={candidateName} onChange={e => setCandidateName(e.target.value)} placeholder="Ex.: Ana Costa" />
         </label>
         <label>
           Informações do perfil
-          <span style={{ fontSize: '11px', fontWeight: 400, color: 'var(--muted)', textTransform: 'none', letterSpacing: 0 }}> (opcional)</span>
+          <span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 400 }}> (opcional)</span>
           <input value={profileInfo} onChange={e => setProfileInfo(e.target.value)} placeholder="Ex.: 8 anos em AWS, liderou times em fintechs" />
         </label>
       </div>
 
+      {/* Dois botões independentes */}
       <div className="actions">
-        <button
-          className="btn btn-primary"
-          onClick={generate}
-          disabled={status === 'loading' || !effectiveBase}
-        >
-          {status === 'loading' ? 'Gerando...' : 'Gerar abordagem PT + EN'}
+        <button className="btn btn-primary" onClick={() => generate('pt')} disabled={pt.status === 'loading' || !effectiveBase}>
+          {pt.status === 'loading' ? 'Gerando PT...' : '🇧🇷 Gerar abordagem em Português'}
+        </button>
+        <button className="btn btn-secondary" onClick={() => generate('en')} disabled={en.status === 'loading' || !effectiveBase}>
+          {en.status === 'loading' ? 'Generating EN...' : '🇺🇸 Generate approach in English'}
         </button>
       </div>
 
-      {status !== 'idle' && (
-        <div style={{ marginBottom: '16px' }}>
-          <span className={`status status-${status}`}>{statusMsg}</span>
+      {/* Status individual */}
+      {pt.status !== 'idle' && pt.status !== 'success' && (
+        <div style={{ marginBottom: '8px' }}>
+          <span className={`status status-${pt.status}`}>{pt.msg}</span>
+        </div>
+      )}
+      {en.status !== 'idle' && en.status !== 'success' && (
+        <div style={{ marginBottom: '8px' }}>
+          <span className={`status status-${en.status}`}>{en.msg}</span>
         </div>
       )}
 
-      {hasOutput && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '8px' }}>
+      {/* Outputs */}
+      {hasAny && (
+        <div style={{ display: 'grid', gridTemplateColumns: hasPT && hasEN ? '1fr 1fr' : '1fr', gap: '16px', marginTop: '16px' }}>
 
-          {/* Mensagem PT */}
-          <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius)', background: 'var(--bg)', padding: '20px' }}>
-            <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#1a7f3c', marginBottom: '14px' }}>
-              🇧🇷 Português do Brasil
-            </div>
-            <MessageRenderer text={messagePT} />
-            <button className="btn btn-sm" style={{ marginTop: '6px' }} onClick={() => copyText(messagePT)}>
-              Copiar PT
-            </button>
-          </div>
-
-          {/* Mensagem EN */}
-          <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius)', background: 'var(--bg)', padding: '20px' }}>
-            <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#1a4fa0', marginBottom: '14px' }}>
-              🇺🇸 English
-            </div>
-            <MessageRenderer text={messageEN} />
-            <button className="btn btn-sm" style={{ marginTop: '6px' }} onClick={() => copyText(messageEN)}>
-              Copy EN
-            </button>
-          </div>
-
-          {/* Divisor */}
-          {(notePT || noteEN) && (
-            <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--muted)' }}>
-                <span style={{ flex: 1, height: '1px', background: 'var(--border)', display: 'block' }} />
-                Nota de Convite · Connection Note
-                <span style={{ flex: 1, height: '1px', background: 'var(--border)', display: 'block' }} />
+          {hasPT && (
+            <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius)', background: 'var(--bg)', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#1a7f3c' }}>
+                🇧🇷 Português do Brasil
               </div>
 
-              {/* Nota PT */}
-              <div style={{ border: '2px dashed var(--primary)', borderRadius: 'var(--radius)', background: 'var(--soft)', padding: '18px' }}>
+              {/* Mensagem */}
+              <MessageRenderer text={pt.result!.message} />
+              <button className="btn btn-sm" onClick={() => copyToClipboard(pt.result!.message)}>Copiar mensagem PT</button>
+
+              {/* Divisor nota */}
+              <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '12px' }}>
                 <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: '#1a7f3c', marginBottom: '8px', display: 'flex', alignItems: 'center' }}>
-                  🇧🇷 Nota PT — convite de conexão
-                  <CharCount text={notePT} limit={280} />
+                  Nota de convite
+                  <CharCount text={pt.result!.note} limit={280} />
                 </div>
-                <p style={{ fontSize: '14px', lineHeight: 1.7, margin: '0 0 12px', color: 'var(--text)' }}>{notePT}</p>
-                <button className="btn btn-sm" onClick={() => copyText(notePT)}>Copiar nota PT</button>
+                <p style={{ fontSize: '14px', lineHeight: 1.7, margin: '0 0 10px', color: 'var(--text)' }}>{pt.result!.note}</p>
+                <button className="btn btn-sm" onClick={() => copyToClipboard(pt.result!.note)}>Copiar nota PT</button>
               </div>
-
-              {/* Nota EN */}
-              <div style={{ border: '2px dashed var(--primary)', borderRadius: 'var(--radius)', background: 'var(--soft)', padding: '18px' }}>
-                <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: '#1a4fa0', marginBottom: '8px', display: 'flex', alignItems: 'center' }}>
-                  🇺🇸 Note EN — connection invite
-                  <CharCount text={noteEN} limit={280} />
-                </div>
-                <p style={{ fontSize: '14px', lineHeight: 1.7, margin: '0 0 12px', color: 'var(--text)' }}>{noteEN}</p>
-                <button className="btn btn-sm" onClick={() => copyText(noteEN)}>Copy note EN</button>
-              </div>
-            </>
+            </div>
           )}
 
-          {/* Copiar tudo */}
-          <div className="actions" style={{ marginTop: '4px' }}>
-            <button className="btn" onClick={() => copyText(outreachToPlainText({ messagePT, messageEN, notePT, noteEN }))}>
-              Copiar tudo
-            </button>
-          </div>
+          {hasEN && (
+            <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius)', background: 'var(--bg)', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#1a4fa0' }}>
+                🇺🇸 English
+              </div>
 
+              {/* Message */}
+              <MessageRenderer text={en.result!.message} />
+              <button className="btn btn-sm" onClick={() => copyToClipboard(en.result!.message)}>Copy message EN</button>
+
+              {/* Note divider */}
+              <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '12px' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: '#1a4fa0', marginBottom: '8px', display: 'flex', alignItems: 'center' }}>
+                  Connection note
+                  <CharCount text={en.result!.note} limit={280} />
+                </div>
+                <p style={{ fontSize: '14px', lineHeight: 1.7, margin: '0 0 10px', color: 'var(--text)' }}>{en.result!.note}</p>
+                <button className="btn btn-sm" onClick={() => copyToClipboard(en.result!.note)}>Copy note EN</button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Copiar tudo (só aparece se tiver os dois) */}
+      {hasPT && hasEN && (
+        <div className="actions" style={{ marginTop: '12px' }}>
+          <button className="btn" onClick={() => copyToClipboard(allText)}>Copiar tudo (PT + EN)</button>
         </div>
       )}
     </section>
