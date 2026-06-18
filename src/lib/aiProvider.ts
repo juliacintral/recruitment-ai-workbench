@@ -1,6 +1,6 @@
 import OpenAI from 'openai'
 import type { InterviewGuide, JDSectioned, Language, OutreachOutput } from '../types'
-import { buildInterviewPrompt, buildJDPrompt, buildOutreachPrompt, brandName } from '../prompts'
+import { buildInterviewPrompt, buildJDPrompt, buildOutreachPrompt } from '../prompts'
 import { interviewSchema, jdSchema, outreachSchema } from './schemas'
 
 const apiKey = import.meta.env.VITE_OPENAI_API_KEY
@@ -46,6 +46,7 @@ export async function generateInterviewGuide(input: {
   return parseStructured<InterviewGuide>(buildInterviewPrompt(input), interviewSchema)
 }
 
+// Assinatura correta: candidateName + profileInfo + jobDescription
 export async function generateLinkedinOutreach(input: {
   candidateName?: string
   profileInfo?: string
