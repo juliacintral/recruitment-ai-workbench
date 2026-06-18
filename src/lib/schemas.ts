@@ -24,8 +24,8 @@ export const jdSchema = {
         type: 'object',
         additionalProperties: false,
         properties: {
-          platform: { type: 'array', items: { type: 'string' } },
-          scope:    { type: 'array', items: { type: 'string' } },
+          platform:   { type: 'array', items: { type: 'string' } },
+          scope:      { type: 'array', items: { type: 'string' } },
           additional: {
             type: 'array',
             items: {
@@ -46,7 +46,11 @@ export const jdSchema = {
       projectContext: { type: 'string' },
       footerLine:     { type: 'string' }
     },
-    required: ['title','location','roleOverview','keyResponsibilities','technicalEnvironment','requiredQualifications','niceToHave','projectContext','footerLine']
+    required: [
+      'title','location','roleOverview','keyResponsibilities',
+      'technicalEnvironment','requiredQualifications','niceToHave',
+      'projectContext','footerLine'
+    ]
   }
 }
 
@@ -72,10 +76,10 @@ export const interviewSchema = {
                 type: 'object',
                 additionalProperties: false,
                 properties: {
-                  question:     { type: 'string' },
-                  objective:    { type: 'string' },
-                  strongSignals:{ type: 'array', items: { type: 'string' } },
-                  weakSignals:  { type: 'array', items: { type: 'string' } }
+                  question:      { type: 'string' },
+                  objective:     { type: 'string' },
+                  strongSignals: { type: 'array', items: { type: 'string' } },
+                  weakSignals:   { type: 'array', items: { type: 'string' } }
                 },
                 required: ['question','objective','strongSignals','weakSignals']
               }
@@ -84,15 +88,15 @@ export const interviewSchema = {
           required: ['title','duration','questions']
         }
       },
-      closing: { type: 'string' },
+      closing:  { type: 'string' },
       scorecard: {
         type: 'array',
         items: {
           type: 'object',
           additionalProperties: false,
           properties: {
-            criterion:        { type: 'string' },
-            whatGoodLooksLike:{ type: 'string' }
+            criterion:         { type: 'string' },
+            whatGoodLooksLike: { type: 'string' }
           },
           required: ['criterion','whatGoodLooksLike']
         }
@@ -102,7 +106,6 @@ export const interviewSchema = {
   }
 }
 
-// outreachSchema: 4 campos obrigatórios
 export const outreachSchema = {
   name: 'linkedin_outreach',
   strict: true,

@@ -36,7 +36,6 @@ export type InterviewGuide = {
   scorecard: { criterion: string; whatGoodLooksLike: string }[]
 }
 
-// 4 campos: mensagem longa PT, mensagem longa EN, nota curta PT (≤280), nota curta EN (≤280)
 export type OutreachOutput = {
   messagePT: string
   messageEN: string

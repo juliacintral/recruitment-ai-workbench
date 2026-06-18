@@ -1,10 +1,7 @@
 import type { Handler } from '@netlify/functions'
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY
-
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
-
-// Melhor modelo Groq para geração de texto longo e estruturado
 const DEFAULT_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct'
 
 export const handler: Handler = async (event) => {
@@ -26,12 +23,10 @@ export const handler: Handler = async (event) => {
     return { statusCode: 400, body: 'Invalid JSON' }
   }
 
-  // Normaliza input: aceita string ou array (OpenAI-style messages)
   const messages: { role: string; content: string }[] = Array.isArray(body.input)
     ? body.input
     : [{ role: 'user', content: String(body.input || '') }]
 
-  // Groq suporta json_object para structured output
   const isStructured = body.text?.format?.type === 'json_schema'
 
   const groqBody: any = {
@@ -43,13 +38,13 @@ export const handler: Handler = async (event) => {
 
   if (isStructured) {
     groqBody.response_format = { type: 'json_object' }
-    // Reforça o schema no system message para maior aderência
     const schemaName = body.text?.format?.name || 'output'
     const schemaStr = JSON.stringify(body.text?.format?.schema || {}, null, 2)
+    // Injeta schema como system message para Groq aderir à estrutura
     groqBody.messages = [
       {
         role: 'system',
-        content: `Você deve responder APENAS com um JSON válido que siga exatamente o schema "${schemaName}" abaixo. Não inclua texto fora do JSON.\n\nSchema:\n${schemaStr}`
+        content: `Responda APENAS com JSON válido seguindo exatamente o schema "${schemaName}" abaixo. Nenhum texto fora do JSON.\n\nSchema:\n${schemaStr}`
       },
       ...messages
     ]
@@ -65,18 +60,14 @@ export const handler: Handler = async (event) => {
       body: JSON.stringify(groqBody)
     })
 
-    const data = await response.json()
+    const data = await response.json() as any
 
     if (!response.ok) {
-      return {
-        statusCode: response.status,
-        body: JSON.stringify(data)
-      }
+      return { statusCode: response.status, body: JSON.stringify(data) }
     }
 
-    const outputText = data.choices?.[0]?.message?.content || ''
+    const outputText: string = data.choices?.[0]?.message?.content || ''
 
-    // Retorna no mesmo formato que o front espera
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },

@@ -6,7 +6,10 @@ export function jdToPlainText(data: JDSectioned): string {
     'Location', data.location, '',
     'Role Overview', data.roleOverview, '',
     'Key Responsibilities',
-    ...data.keyResponsibilities.flatMap(b => [b.theme, ...b.items.map(i => `• ${i}`)]),
+    ...data.keyResponsibilities.flatMap(b => [
+      b.theme,
+      ...b.items.map(i => `• ${i}`)
+    ]),
     '',
     'Technical Environment',
     ...(data.technicalEnvironment.platform?.length
@@ -19,9 +22,11 @@ export function jdToPlainText(data: JDSectioned): string {
       [s.label, ...s.items.map(x => `• ${x}`)]
     ) ?? []),
     '',
-    'Required Qualifications', ...data.requiredQualifications.map(x => `• ${x}`),
+    'Required Qualifications',
+    ...data.requiredQualifications.map(x => `• ${x}`),
     '',
-    'Nice to Have', ...data.niceToHave.map(x => `• ${x}`),
+    'Nice to Have',
+    ...data.niceToHave.map(x => `• ${x}`),
     '',
     'Project Context', data.projectContext,
     '', data.footerLine
