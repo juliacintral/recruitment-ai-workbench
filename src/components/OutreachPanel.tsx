@@ -1,79 +1,112 @@
 import { useState, useCallback } from 'react'
-import type { Language } from '../types'
 import { generateLinkedinOutreach } from '../lib/aiProvider'
 import { outreachToPlainText } from '../lib/formatters'
 import { copyToClipboard } from '../lib/clipboard'
-import { OutputActions } from './OutputActions'
 import { StatusBadge } from './StatusBadge'
 
 type Status = 'idle' | 'loading' | 'success' | 'error'
 
 export function OutreachPanel({ sharedBase }: { sharedBase: string }) {
   const [base, setBase] = useState('')
-  const [idioma, setIdioma] = useState<Language>('pt-BR')
-  const [persona, setPersona] = useState('')
+  const [candidateName, setCandidateName] = useState('')
+  const [profileInfo, setProfileInfo] = useState('')
   const [status, setStatus] = useState<Status>('idle')
   const [statusMsg, setStatusMsg] = useState('')
-  const [output, setOutput] = useState('')
+  const [outputPT, setOutputPT] = useState('')
+  const [outputEN, setOutputEN] = useState('')
 
   const effectiveBase = base.trim() || sharedBase
 
   const generate = useCallback(async () => {
-    if (!effectiveBase) { setStatus('error'); setStatusMsg('Informe uma JD ou use a aba Job Description primeiro.'); return }
+    if (!effectiveBase) {
+      setStatus('error')
+      setStatusMsg('Informe uma JD ou use a aba Job Description primeiro.')
+      return
+    }
     setStatus('loading')
-    setStatusMsg('Gerando abordagem LinkedIn...')
-    setOutput('')
+    setStatusMsg('Gerando abordagens PT e EN...')
+    setOutputPT('')
+    setOutputEN('')
     try {
-      const result = await generateLinkedinOutreach({ idioma, persona, jobDescription: effectiveBase })
-      const text = outreachToPlainText(result)
-      setOutput(text)
+      const result = await generateLinkedinOutreach({
+        candidateName: candidateName.trim() || undefined,
+        profileInfo: profileInfo.trim() || undefined,
+        jobDescription: effectiveBase
+      })
+      setOutputPT(result.messagePT)
+      setOutputEN(result.messageEN)
       setStatus('success')
-      setStatusMsg('Abordagem gerada com sucesso.')
+      setStatusMsg('Abordagens geradas com sucesso.')
     } catch (err: any) {
       setStatus('error')
       setStatusMsg(err?.message || 'Erro ao gerar a abordagem.')
     }
-  }, [effectiveBase, idioma, persona])
+  }, [effectiveBase, candidateName, profileInfo])
+
+  const fullText = outreachToPlainText({ messagePT: outputPT, messageEN: outputEN })
 
   return (
     <section className="panel">
       {sharedBase && !base && (
         <div className="shared-notice">✓ Usando JD gerada na aba anterior. Ou cole uma diferente abaixo.</div>
       )}
+
       <div className="grid">
         <label className="span-2">
           JD ou contexto da vaga
-          <textarea value={base} onChange={(e) => setBase(e.target.value)} rows={8} placeholder="Cole a JD aqui ou deixe vazio para usar a JD gerada na aba anterior." />
+          <textarea
+            value={base}
+            onChange={(e) => setBase(e.target.value)}
+            rows={7}
+            placeholder="Cole a JD aqui ou deixe vazio para usar a JD gerada na aba anterior."
+          />
         </label>
         <label>
-          Idioma
-          <select value={idioma} onChange={(e) => setIdioma(e.target.value as Language)}>
-            <option value="pt-BR">Português</option>
-            <option value="en">English</option>
-          </select>
+          Nome do candidato <span className="optional">(opcional)</span>
+          <input
+            value={candidateName}
+            onChange={(e) => setCandidateName(e.target.value)}
+            placeholder="Ex.: Ana Costa"
+          />
         </label>
         <label>
-          Persona / tom
-          <input value={persona} onChange={(e) => setPersona(e.target.value)} placeholder="Ex.: Staff Engineer passivo, tom consultivo" />
+          Informações do perfil <span className="optional">(opcional)</span>
+          <input
+            value={profileInfo}
+            onChange={(e) => setProfileInfo(e.target.value)}
+            placeholder="Ex.: 8 anos em AWS, liderou times em fintechs"
+          />
         </label>
       </div>
 
       <div className="actions">
-        <button className="btn btn-primary" onClick={generate} disabled={status === 'loading' || !effectiveBase}>
-          {status === 'loading' ? 'Gerando...' : 'Gerar abordagem LinkedIn'}
+        <button
+          className="btn btn-primary"
+          onClick={generate}
+          disabled={status === 'loading' || !effectiveBase}
+        >
+          {status === 'loading' ? 'Gerando...' : 'Gerar abordagem PT + EN'}
         </button>
       </div>
 
       <StatusBadge status={status} message={statusMsg} />
 
-      {output && (
-        <>
-          <OutputActions
-            text={output}
-            onCopy={async () => { await copyToClipboard(output); setStatusMsg('Copiado.'); setStatus('success') }}
-          />
-          <pre className="output">{output}</pre>
-        </>
+      {outputPT && outputEN && (
+        <div className="outreach-dual">
+          <div className="outreach-block">
+            <div className="outreach-lang-header pt">🇧🇷  Português do Brasil</div>
+            <pre className="output">{outputPT}</pre>
+            <button className="btn-copy-small" onClick={() => copyToClipboard(outputPT)}>Copiar PT</button>
+          </div>
+          <div className="outreach-block">
+            <div className="outreach-lang-header en">🇺🇸  English</div>
+            <pre className="output">{outputEN}</pre>
+            <button className="btn-copy-small" onClick={() => copyToClipboard(outputEN)}>Copy EN</button>
+          </div>
+          <div className="actions" style={{ marginTop: '12px' }}>
+            <button onClick={() => copyToClipboard(fullText)}>Copiar ambas</button>
+          </div>
+        </div>
       )}
     </section>
   )
