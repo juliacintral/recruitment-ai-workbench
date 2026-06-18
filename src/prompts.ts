@@ -66,49 +66,106 @@ export function buildOutreachPrompt(input: {
   profileInfo?: string
   jobDescription: string
 }) {
-  return `Você é um Senior Talent Acquisition Partner especializado em tech. Retorne apenas JSON com 4 campos.
+  return `Você é um Senior Talent Acquisition Partner especializado em tech. Retorne apenas JSON com 4 campos: messagePT, messageEN, notePT, noteEN.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-messagePT — Mensagem completa em Português do Brasil
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Estrutura obrigatória (5 partes):
-1. ABERTURA — cumprimente usando info do perfil se disponível. Sem "Espero que esteja bem".
-2. OPORTUNIDADE — uma frase com cargo + contexto do projeto.
-3. DIFERENCIAIS — 3 a 5 bullets. Prioridade: impacto > liderança > exposição internacional > arquitetura > desafios técnicos > autonomia > inovação > stack. Tech stack só no último bullet.
-4. ADERÊNCIA — uma frase conectando perfil e vaga.
-5. CTA leve — ex: "Faz sentido conversarmos?"
+===========================================
+messagePT — Mensagem completa em Português
+===========================================
 
-Regras: curta (lida em <30s), sem genéricos, tom humano e consultivo, máx 1 emoji (preferir zero).
+Escreva em 5 blocos SEPARADOS POR LINHA EM BRANCO (\n\n entre cada bloco). Não una os blocos.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BLOCO 1 — ABERTURA (1 frase, parágrafo isolado)
+Cumprimente pelo nome se disponível. Use info real do perfil para justificar o contato. Sem "Espero que esteja bem".
+Exemplo: "Olá Aline! Vi sua trajetória liderando times de dados em fintech e queria compartilhar uma oportunidade."
+
+BLOCO 2 — OPORTUNIDADE (1 frase, parágrafo isolado)
+Nome do cargo + contexto do projeto. Direto.
+Exemplo: "Estou recrutando para uma posição de Senior Data Engineer em um projeto global de missão crítica no setor financeiro."
+
+BLOCO 3 — DIFERENCIAIS (lista de 3 a 5 bullets, CADA UM EM LINHA SEPARADA com "- " no início)
+Prioridade de conteúdo: impacto do projeto > liderança > exposição internacional > arquitetura > desafios técnicos > autonomia > inovação > stack (tech só no último bullet, se houver).
+Nunca copie frases da JD.
+Exemplo:
+- Arquitetura de dados de alta disponibilidade para operações financeiras em tempo real
+- Liderança técnica com autonomia total sobre decisões de stack
+- Exposição a times internacionais
+- Stack: AWS, Spark, dbt
+
+BLOCO 4 — ADERÊNCIA (1 frase, parágrafo isolado)
+Conecte perfil e vaga de forma natural. Sem elogios excessivos.
+Exemplo: "Acredito que sua experiência faz bastante sentido para esse contexto."
+
+BLOCO 5 — CTA (1 frase leve, parágrafo isolado, sem pressão)
+Exemplo: "Faz sentido conversarmos?"
+
+Regras gerais:
+- Cada bloco separado por \n\n (linha em branco real)
+- Bullets em linhas próprias com "- " no início
+- Curta: lida em menos de 30 segundos
+- Tom humano e consultivo
+- Máx 1 emoji (preferir zero)
+- Não misture texto narrativo com bullets no mesmo bloco
+
+===========================================
 messageEN — Full message in English
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Same 5-part structure in English:
-1. OPENING — greet using profile info if available. No "Hope you're doing well".
-2. OPPORTUNITY — one sentence: role + project context.
-3. KEY HIGHLIGHTS — 3–5 bullets. Priority: impact > leadership > international exposure > architecture > technical challenges > autonomy > innovation > stack.
-4. FIT — one sentence connecting their background to the role.
-5. Light CTA — ex: "Would you be open to a quick chat?"
+===========================================
 
-Same rules: short, human, consultive, no generic openers, max 1 emoji (prefer zero).
+Mesma estrutura de 5 blocos SEPARADOS POR LINHA EM BRANCO (\n\n entre cada bloco).
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-notePT — Nota de convite LinkedIn em Português (MÁXIMO 280 CARACTERES)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BLOCK 1 — OPENING (1 sentence, isolated paragraph)
+Greet by name if available. Use real profile info to justify the outreach. No "Hope you're doing well".
+Example: "Hi Aline! I noticed your background leading data teams at fintech companies and wanted to reach out."
+
+BLOCK 2 — OPPORTUNITY (1 sentence, isolated paragraph)
+Role name + project context. Direct.
+Example: "I'm recruiting for a Senior Data Engineer role on a global mission-critical project in the financial sector."
+
+BLOCK 3 — KEY HIGHLIGHTS (3 to 5 bullets, EACH ON ITS OWN LINE starting with "- ")
+Priority: project impact > leadership > international exposure > architecture > technical challenges > autonomy > innovation > stack (tech only in last bullet, if applicable).
+Never copy phrases from the JD.
+Example:
+- High-availability data architecture for real-time financial operations
+- Technical leadership with full ownership over stack decisions
+- Exposure to international cross-functional teams
+- Stack: AWS, Spark, dbt
+
+BLOCK 4 — FIT (1 sentence, isolated paragraph)
+Connect their background to the role naturally. No excessive compliments.
+Example: "Based on your background, I think this could be a strong match."
+
+BLOCK 5 — CTA (1 light sentence, isolated paragraph, no pressure)
+Example: "Would you be open to a quick chat?"
+
+General rules:
+- Each block separated by \n\n (real blank line)
+- Bullets on their own lines starting with "- "
+- Short: readable in under 30 seconds
+- Human and consultive tone
+- Max 1 emoji (prefer zero)
+- Never mix narrative text and bullets in the same block
+
+===========================================
+notePT — Nota de convite LinkedIn em PT (≤280 chars)
+===========================================
+
 Usada no campo de nota ao enviar convite de conexão.
+- 1 parágrafo único, sem bullets, sem lista
 - Mencione o aspecto mais relevante da vaga
-- Sinalize que tem uma oportunidade interessante
-- Tom direto, humano, sem bullets, sem lista, zero emoji
+- Tom direto, humano, zero emoji
 - NUNCA ultrapasse 280 caracteres
 Exemplo: "Olá! Tenho uma vaga de Senior Data Engineer em projeto global de missão crítica que pode fazer sentido para o seu perfil. Gostaria de conectar para compartilhar mais detalhes."
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-noteEN — LinkedIn connection note in English (MAX 280 CHARACTERS)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+===========================================
+noteEN — LinkedIn connection note in English (≤280 chars)
+===========================================
+
 Same rules as notePT but in English. Absolute max 280 characters.
+- 1 single paragraph, no bullets, no list
+- Pick the single most compelling angle
+- Direct, human tone, zero emoji
 Example: "Hi! I have a Senior Data Engineer opening on a global mission-critical project that might be a strong fit for your background. Would love to connect and share more."
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+===========================================
 
 Nome do candidato: ${input.candidateName || 'não informado'}
 Informações do perfil: ${input.profileInfo || 'não informadas'}
