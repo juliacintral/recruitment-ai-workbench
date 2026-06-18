@@ -39,4 +39,6 @@ export type InterviewGuide = {
 export type OutreachOutput = {
   messagePT: string
   messageEN: string
+  notePT: string
+  noteEN: string
 }

@@ -110,8 +110,10 @@ export const outreachSchema = {
     additionalProperties: false,
     properties: {
       messagePT: { type: 'string' },
-      messageEN: { type: 'string' }
+      messageEN: { type: 'string' },
+      notePT: { type: 'string' },
+      noteEN: { type: 'string' }
     },
-    required: ['messagePT', 'messageEN']
+    required: ['messagePT', 'messageEN', 'notePT', 'noteEN']
   }
 }

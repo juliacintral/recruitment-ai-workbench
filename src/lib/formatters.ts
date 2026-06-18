@@ -57,6 +57,16 @@ export function outreachToPlainText(data: OutreachOutput): string {
     '====================================',
     'VERSÃO EN — ENGLISH',
     '====================================',
-    data.messageEN
+    data.messageEN,
+    '',
+    '====================================',
+    'NOTA DE CONVITE PT (≤280 chars)',
+    '====================================',
+    data.notePT,
+    '',
+    '====================================',
+    'CONNECTION NOTE EN (≤280 chars)',
+    '====================================',
+    data.noteEN
   ].join('\n')
 }
