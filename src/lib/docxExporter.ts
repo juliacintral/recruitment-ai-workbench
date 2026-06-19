@@ -12,11 +12,13 @@ import type { JDSectioned, Language } from '../types'
 import logoUrl from '../../public/Logo_Insi_logo_Positivo_Color_SemFundo (1).png'
 
 const PURPLE = '3B0077'
+const SIZE_TITLE = 28   // half-points = 14pt
+const SIZE_BODY  = 22   // half-points = 11pt
 
 function h2(text: string): Paragraph {
   return new Paragraph({
     heading: HeadingLevel.HEADING_2,
-    children: [new TextRun({ text, bold: true, size: 28, color: PURPLE })],
+    children: [new TextRun({ text, bold: true, size: SIZE_BODY, color: PURPLE })],
     spacing: { before: 300, after: 120 },
     border: {
       bottom: { style: BorderStyle.SINGLE, size: 4, color: PURPLE, space: 4 }
@@ -27,7 +29,7 @@ function h2(text: string): Paragraph {
 function h3(text: string): Paragraph {
   return new Paragraph({
     heading: HeadingLevel.HEADING_3,
-    children: [new TextRun({ text, bold: true, size: 24, color: PURPLE })],
+    children: [new TextRun({ text, bold: true, size: SIZE_BODY, color: PURPLE })],
     spacing: { before: 180, after: 80 }
   })
 }
@@ -45,7 +47,7 @@ function bullets(items: string[]): Paragraph[] {
 
 function para(text: string, spaceAfter = 120): Paragraph {
   return new Paragraph({
-    children: [new TextRun({ text, size: 22 })],
+    children: [new TextRun({ text, size: SIZE_BODY })],
     spacing: { after: spaceAfter }
   })
 }
@@ -83,9 +85,10 @@ export async function exportJDToDocx(
     })
   )
 
+  // Título — Calibri 14pt (SIZE_TITLE = 28 half-points)
   children.push(
     new Paragraph({
-      children: [new TextRun({ text: data.title, bold: true, size: 44, color: PURPLE })],
+      children: [new TextRun({ text: data.title, bold: true, size: SIZE_TITLE, color: PURPLE, font: 'Calibri' })],
       spacing: { after: 320 }
     })
   )
@@ -138,7 +141,7 @@ export async function exportJDToDocx(
   const footerLine = `${clientName} -- ${data.title} -- ${brand}`
   children.push(
     new Paragraph({
-      children: [new TextRun({ text: footerLine, bold: true, size: 20, color: PURPLE })],
+      children: [new TextRun({ text: footerLine, bold: true, size: SIZE_BODY, color: PURPLE })],
       spacing: { before: 400, after: 0 }
     })
   )
@@ -146,7 +149,7 @@ export async function exportJDToDocx(
   const doc = new Document({
     styles: {
       default: {
-        document: { run: { font: 'Calibri', size: 22, color: '2E2E2E' } }
+        document: { run: { font: 'Calibri', size: SIZE_BODY, color: '2E2E2E' } }
       }
     },
     sections: [{ children }]
