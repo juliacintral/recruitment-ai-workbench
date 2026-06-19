@@ -76,13 +76,13 @@ export async function exportJDToDocx(
   const brand = brandName(idioma)
   const children: Paragraph[] = []
 
-  // ── Logo Insi — 220x74 para boa visualização ──
+  // ── Logo Insi — 160x54 (reduzida para melhor visualização no topo) ──
   children.push(
     new Paragraph({
       children: [
         new ImageRun({
           data: logoBytes,
-          transformation: { width: 220, height: 74 },
+          transformation: { width: 160, height: 54 },
           type: 'png'
         })
       ],
