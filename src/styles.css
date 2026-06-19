@@ -149,7 +149,7 @@ body {
   color: var(--muted);
   padding: 0 4px;
   margin-bottom: -16px;
-  margin-top: 8px;   /* afasta do brand acima */
+  margin-top: 20px;   /* espaço generoso acima do label */
 }
 
 /* ===== TABS ===== */
