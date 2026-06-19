@@ -35,20 +35,28 @@ export function jdToPlainText(data: JDSectioned): string {
 
 export function interviewToPlainText(data: InterviewGuide): string {
   return [
-    'Abertura', data.opening, '',
-    ...data.blocks.flatMap(block => [
-      `${block.title} (${block.duration})`,
-      ...block.questions.flatMap((q, i) => [
-        `${i + 1}. ${q.question}`,
-        `   Objetivo: ${q.objective}`,
-        `   ✓ Forte: ${q.strongSignals.join('; ')}`,
-        `   ✗ Fraca: ${q.weakSignals.join('; ')}`
-      ]),
-      ''
-    ]),
-    'Encerramento', data.closing, '',
-    'Scorecard',
-    ...data.scorecard.map(s => `• ${s.criterion}: ${s.whatGoodLooksLike}`)
+    '=== INTRODUÇÃO ===',
+    data.opening,
+    '',
+    ...data.blocks.flatMap(block => {
+      const header = `■ ${block.title} (${block.duration})`
+      if (!block.questions || block.questions.length === 0) {
+        // Bloco de overview — sem perguntas, só orientações
+        return [header, '']
+      }
+      return [
+        header,
+        ...block.questions.flatMap((q, i) => [
+          `${i + 1}. ${q.question}`,
+          `   Objetivo: ${q.objective}`,
+          `   ✓ Forte: ${q.strongSignals.join('; ')}`,
+          `   ✗ Fraca:  ${q.weakSignals.join('; ')}`,
+          ''
+        ])
+      ]
+    }),
+    '=== ENCERRAMENTO ===',
+    data.closing
   ].join('\n')
 }
 

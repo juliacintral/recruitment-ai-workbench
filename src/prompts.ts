@@ -48,11 +48,34 @@ export function buildInterviewPrompt(input: {
 
 Crie um roteiro de entrevista técnica de 30 minutos com base na JD abaixo.
 
-Obrigatório:
-- 4 blocos: Abertura (0–5min), Bloco Técnico 1 (5–15min), Bloco Técnico 2 (15–25min), Encerramento (25–30min)
-- 6 a 8 perguntas técnicas objetivas
-- Para cada pergunta: question, objective, strongSignals[], weakSignals[]
-- Scorecard resumido: criterion + whatGoodLooksLike
+Estrutura obrigatória — 4 blocos:
+
+1. opening (string)
+Texto introdutório para o entrevistador: como se apresentar, como apresentar brevemente a empresa/posição ao candidato, e como conduzir os primeiros minutos.
+
+2. blocks (array) — EXATAMENTE nesta ordem:
+   - Abertura e Overview da Posição (0–5 min)
+     Não inclua perguntas aqui. Use este bloco para descrever o que o entrevistador deve falar:
+     contexto da empresa, descrição da vaga, modelo de trabalho, próximos passos do processo.
+     O campo questions deve ter 0 itens (array vazio).
+   - Bloco Técnico 1 (5–15 min) — 3 a 4 perguntas
+   - Bloco Técnico 2 (15–25 min) — 3 a 4 perguntas
+   - Encerramento (25–30 min) — 1 a 2 perguntas leves + espaço para dúvidas do candidato
+
+3. closing (string)
+Texto de encerramento: como finalizar a entrevista, próximos passos do processo, mensagem de agradecimento.
+
+Para cada pergunta (exceto no bloco de Overview):
+- question: pergunta clara e objetiva
+- objective: o que esta pergunta valida
+- strongSignals: lista de sinais de resposta forte
+- weakSignals: lista de sinais de resposta fraca
+
+Regras:
+- Perguntas técnicas específicas para a vaga
+- Não repetir temas entre os blocos
+- Tom profissional e objetivo
+- Roteiro realísta e utilizavel em 30 minutos
 
 Idioma: ${langLabel(input.idioma)}
 Foco: ${input.foco || 'N/A'}

@@ -93,8 +93,6 @@ body {
   top: 0;
   height: 100vh;
   overflow-y: auto;
-  /* Subtle gradient shimmer on the right edge */
-  background-image: linear-gradient(to bottom, var(--sidebar) 0%, var(--sidebar) 100%);
 }
 
 .sidebar::after {
@@ -151,6 +149,7 @@ body {
   color: var(--muted);
   padding: 0 4px;
   margin-bottom: -16px;
+  margin-top: 8px;   /* afasta do brand acima */
 }
 
 /* ===== TABS ===== */
@@ -197,7 +196,6 @@ body {
 }
 
 .tab-icon { font-size: 15px; flex-shrink: 0; }
-
 .tab-label { flex: 1; }
 
 /* ===== SIDEBAR FOOTER ===== */
@@ -283,7 +281,7 @@ body {
   margin: 20px 0;
 }
 
-/* ===== SECTION HEADER (inside panel) ===== */
+/* ===== SECTION HEADER ===== */
 .section-header {
   font-size: 11px;
   font-weight: 700;
@@ -388,7 +386,6 @@ select {
 }
 
 .btn:active:not(:disabled) { transform: translateY(0); }
-
 .btn:disabled { opacity: .4; cursor: not-allowed; }
 
 .btn-primary {
@@ -504,12 +501,11 @@ select {
   flex-shrink: 0;
 }
 
-.status-idle   { background: var(--bg);         color: var(--muted);   display: none; }
+.status-idle    { display: none; }
 .status-loading { background: var(--primary-soft); color: var(--primary); }
-.status-success { background: var(--success-bg);  color: var(--success); }
-.status-error   { background: var(--error-bg);    color: var(--error);   }
+.status-success { background: var(--success-bg);   color: var(--success); }
+.status-error   { background: var(--error-bg);     color: var(--error);   }
 
-/* Loading pulse on the dot */
 .status-loading::before {
   animation: pulse-dot 1.1s ease-in-out infinite;
 }
@@ -595,10 +591,9 @@ select {
   flex: 1;
   height: 1px;
   background: var(--border);
-  border-style: dashed;
 }
 
-/* ===== OUTREACH RENDERER ===== */
+/* ===== OUTREACH ===== */
 .outreach-dual {
   display: flex;
   flex-direction: column;

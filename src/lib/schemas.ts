@@ -88,21 +88,9 @@ export const interviewSchema = {
           required: ['title','duration','questions']
         }
       },
-      closing:  { type: 'string' },
-      scorecard: {
-        type: 'array',
-        items: {
-          type: 'object',
-          additionalProperties: false,
-          properties: {
-            criterion:         { type: 'string' },
-            whatGoodLooksLike: { type: 'string' }
-          },
-          required: ['criterion','whatGoodLooksLike']
-        }
-      }
+      closing: { type: 'string' }
     },
-    required: ['opening','blocks','closing','scorecard']
+    required: ['opening','blocks','closing']
   }
 }
 

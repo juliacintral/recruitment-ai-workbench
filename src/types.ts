@@ -29,11 +29,11 @@ export type InterviewBlock = {
   questions: InterviewQuestion[]
 }
 
+// scorecard removido
 export type InterviewGuide = {
   opening: string
   blocks: InterviewBlock[]
   closing: string
-  scorecard: { criterion: string; whatGoodLooksLike: string }[]
 }
 
 export type OutreachOutput = {
