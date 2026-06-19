@@ -1,4 +1,5 @@
 import {
+  AlignmentType,
   BorderStyle,
   Document,
   HeadingLevel,
@@ -11,24 +12,28 @@ import { saveAs } from 'file-saver'
 import type { JDSectioned, Language } from '../types'
 import logoUrl from '../../public/Logo_Insi_logo_Positivo_Color_SemFundo (1).png'
 
-const PURPLE = '3B0077'
-const SIZE_TITLE = 28   // half-points = 14pt
-const SIZE_BODY  = 22   // half-points = 11pt
+const PURPLE    = '3B0077'
+const SIZE_TITLE = 28   // 14pt
+const SIZE_BODY  = 22   // 11pt
 
-function h2(text: string): Paragraph {
+function h2(text: string, noBorder = false): Paragraph {
   return new Paragraph({
     heading: HeadingLevel.HEADING_2,
+    alignment: AlignmentType.JUSTIFIED,
     children: [new TextRun({ text, bold: true, size: SIZE_BODY, color: PURPLE })],
     spacing: { before: 300, after: 120 },
-    border: {
-      bottom: { style: BorderStyle.SINGLE, size: 4, color: PURPLE, space: 4 }
-    }
+    ...(noBorder ? {} : {
+      border: {
+        bottom: { style: BorderStyle.SINGLE, size: 4, color: PURPLE, space: 4 }
+      }
+    })
   })
 }
 
 function h3(text: string): Paragraph {
   return new Paragraph({
     heading: HeadingLevel.HEADING_3,
+    alignment: AlignmentType.JUSTIFIED,
     children: [new TextRun({ text, bold: true, size: SIZE_BODY, color: PURPLE })],
     spacing: { before: 180, after: 80 }
   })
@@ -40,6 +45,7 @@ function bullets(items: string[]): Paragraph[] {
       new Paragraph({
         text: item,
         bullet: { level: 0 },
+        alignment: AlignmentType.JUSTIFIED,
         spacing: { after: 80 }
       })
   )
@@ -47,6 +53,7 @@ function bullets(items: string[]): Paragraph[] {
 
 function para(text: string, spaceAfter = 120): Paragraph {
   return new Paragraph({
+    alignment: AlignmentType.JUSTIFIED,
     children: [new TextRun({ text, size: SIZE_BODY })],
     spacing: { after: spaceAfter }
   })
@@ -71,13 +78,14 @@ export async function exportJDToDocx(
   const brand = brandName(idioma)
   const children: Paragraph[] = []
 
-  // Logo — 180x140px
+  // Logo — 120x110px
   children.push(
     new Paragraph({
+      alignment: AlignmentType.LEFT,
       children: [
         new ImageRun({
           data: logoBytes,
-          transformation: { width: 180, height: 140 },
+          transformation: { width: 120, height: 110 },
           type: 'png'
         })
       ],
@@ -85,16 +93,17 @@ export async function exportJDToDocx(
     })
   )
 
-  // Título — Calibri 14pt (SIZE_TITLE = 28 half-points)
+  // Título — centralizado, Calibri 14pt
   children.push(
     new Paragraph({
+      alignment: AlignmentType.CENTER,
       children: [new TextRun({ text: data.title, bold: true, size: SIZE_TITLE, color: PURPLE, font: 'Calibri' })],
       spacing: { after: 320 }
     })
   )
 
-  children.push(h2(`Location: ${data.location}`))
-  children.push(new Paragraph({ spacing: { after: 40 } }))
+  // Location — sem borda embaixo, sem espaço extra depois
+  children.push(h2(`Location: ${data.location}`, true))
 
   children.push(h2('Role Overview'))
   for (const p of data.roleOverview.split(/\n{2,}/).filter(Boolean)) {
@@ -141,6 +150,7 @@ export async function exportJDToDocx(
   const footerLine = `${clientName} -- ${data.title} -- ${brand}`
   children.push(
     new Paragraph({
+      alignment: AlignmentType.JUSTIFIED,
       children: [new TextRun({ text: footerLine, bold: true, size: SIZE_BODY, color: PURPLE })],
       spacing: { before: 400, after: 0 }
     })
