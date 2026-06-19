@@ -69,13 +69,13 @@ export async function exportJDToDocx(
   const brand = brandName(idioma)
   const children: Paragraph[] = []
 
-  // Logo — 180x100px
+  // Logo — 180x140px
   children.push(
     new Paragraph({
       children: [
         new ImageRun({
           data: logoBytes,
-          transformation: { width: 180, height: 100 },
+          transformation: { width: 180, height: 140 },
           type: 'png'
         })
       ],
