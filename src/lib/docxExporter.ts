@@ -11,12 +11,8 @@ import { saveAs } from 'file-saver'
 import type { JDSectioned, Language } from '../types'
 import logoUrl from '../../public/Logo_Insi_logo_Positivo_Color_SemFundo (1).png'
 
-// Cor roxo escuro Insi — aplicada em todos os títulos e subtítulos
 const PURPLE = '3B0077'
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-/** H2: seções principais — roxo escuro, bold, borda inferior roxa */
 function h2(text: string): Paragraph {
   return new Paragraph({
     heading: HeadingLevel.HEADING_2,
@@ -28,7 +24,6 @@ function h2(text: string): Paragraph {
   })
 }
 
-/** H3: subseções (Platform, Scope, Implementation & Development etc.) */
 function h3(text: string): Paragraph {
   return new Paragraph({
     heading: HeadingLevel.HEADING_3,
@@ -65,8 +60,6 @@ export function brandName(idioma: Language): string {
   return idioma === 'pt-BR' ? 'Insi' : 'Insi North América'
 }
 
-// ─── Exportador principal ─────────────────────────────────────────────────────
-
 export async function exportJDToDocx(
   data: JDSectioned,
   clientName: string,
@@ -76,13 +69,13 @@ export async function exportJDToDocx(
   const brand = brandName(idioma)
   const children: Paragraph[] = []
 
-  // ── Logo Insi — 160x54 (reduzida para melhor visualização no topo) ──
+  // Logo — 180x100px
   children.push(
     new Paragraph({
       children: [
         new ImageRun({
           data: logoBytes,
-          transformation: { width: 160, height: 54 },
+          transformation: { width: 180, height: 100 },
           type: 'png'
         })
       ],
@@ -90,7 +83,6 @@ export async function exportJDToDocx(
     })
   )
 
-  // ── Título da vaga — roxo escuro, bold ──
   children.push(
     new Paragraph({
       children: [new TextRun({ text: data.title, bold: true, size: 44, color: PURPLE })],
@@ -98,17 +90,14 @@ export async function exportJDToDocx(
     })
   )
 
-  // ── Location ──
   children.push(h2(`Location: ${data.location}`))
   children.push(new Paragraph({ spacing: { after: 40 } }))
 
-  // ── Role Overview ──
   children.push(h2('Role Overview'))
   for (const p of data.roleOverview.split(/\n{2,}/).filter(Boolean)) {
     children.push(para(p))
   }
 
-  // ── Key Responsibilities ──
   children.push(h2('Key Responsibilities'))
   for (const block of data.keyResponsibilities) {
     children.push(h3(block.theme))
@@ -116,7 +105,6 @@ export async function exportJDToDocx(
     children.push(new Paragraph({ spacing: { after: 40 } }))
   }
 
-  // ── Technical Environment ──
   children.push(h2('Technical Environment'))
   if (data.technicalEnvironment.platform?.length) {
     children.push(h3('Platform'))
@@ -134,23 +122,19 @@ export async function exportJDToDocx(
     children.push(new Paragraph({ spacing: { after: 40 } }))
   }
 
-  // ── Required Qualifications ──
   children.push(h2('Required Qualifications'))
   children.push(...bullets(data.requiredQualifications))
   children.push(new Paragraph({ spacing: { after: 40 } }))
 
-  // ── Nice to Have ──
   children.push(h2('Nice to Have'))
   children.push(...bullets(data.niceToHave))
   children.push(new Paragraph({ spacing: { after: 40 } }))
 
-  // ── Project Context ──
   children.push(h2('Project Context'))
   for (const p of data.projectContext.split(/\n{2,}/).filter(Boolean)) {
     children.push(para(p))
   }
 
-  // ── Linha final — roxo escuro ──
   const footerLine = `${clientName} -- ${data.title} -- ${brand}`
   children.push(
     new Paragraph({
