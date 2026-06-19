@@ -33,21 +33,18 @@ export default function App() {
           <p>Ferramenta de IA para recrutamento consultivo e técnico.</p>
         </div>
 
-        <div>
-          <div className="nav-label">Módulos</div>
-          <nav className="tabs">
-            {TABS.map(tab => (
-              <button
-                key={tab.key}
-                className={`tab-btn ${activeTab === tab.key ? 'active' : ''}`}
-                onClick={() => setActiveTab(tab.key)}
-              >
-                <span className="tab-icon">{tab.icon}</span>
-                <span className="tab-label">{tab.label}</span>
-              </button>
-            ))}
-          </nav>
-        </div>
+        <nav className="tabs">
+          {TABS.map(tab => (
+            <button
+              key={tab.key}
+              className={`tab-btn ${activeTab === tab.key ? 'active' : ''}`}
+              onClick={() => setActiveTab(tab.key)}
+            >
+              <span className="tab-icon">{tab.icon}</span>
+              <span className="tab-label">{tab.label}</span>
+            </button>
+          ))}
+        </nav>
 
         <div className="sidebar-footer">
           <button
