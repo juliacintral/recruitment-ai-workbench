@@ -1,39 +1,39 @@
 # Recruitment AI Workbench
 
-Web app de recrutamento com 3 módulos de IA: **Job Description**, **Roteiro Técnico de Entrevista** e **LinkedIn Outreach**.
+Esse projeto nasceu de uma necessidade real: eu precisava de uma ferramenta que me ajudasse a criar JDs, roteiros de entrevista e mensagens de outreach de forma rápida — sem depender de uma assinatura paga ou de copiar e colar em 3 abas diferentes.
 
-## Features
+São 3 módulos que se conectam: você cria a vaga e o conteúdo gerado já alimenta a entrevista e o outreach automaticamente.
 
-- 📄 **Job Description** — Gera JD estruturada (Location, Role Overview, Key Responsibilities com blocos temáticos, Technical Environment, Required Qualifications, Nice to Have, Project Context, rodapé com cliente + cargo + marca). Exporta em `.docx`.
-- 🎯 **Roteiro Técnico** — Roteiro de entrevista de 30 minutos com blocos de tempo, perguntas, sinais de resposta forte/fraca e scorecard.
-- 💬 **LinkedIn Outreach** — Rational, mensagem principal, follow-up e ganchos de personalização.
-- Modo claro/escuro
-- Sem banco de dados, sem autenticação
-- Stateless (refresh = nova sessão)
-- A JD gerada alimenta automaticamente as abas de entrevista e outreach
+## O que tem aqui
+
+- **Job Description** — Gera JD estruturada com blocos de responsabilidades, stack técnica, qualificações e contexto do projeto. Exporta direto em `.docx`.
+- **Roteiro Técnico** — Entrevista de 30 minutos com blocos de tempo, perguntas abertas, e sinais de resposta forte ou fraca. Vai direto pro scorecard.
+- **LinkedIn Outreach** — Mensagem principal, follow-up e ganchos de personalização. Tudo pronto pra mandar.
+
+Sem banco de dados. Sem login. Atualizar a página zera tudo — é intencional.
 
 ## Stack
 
 - React 18 + TypeScript + Vite
-- `docx` + `file-saver` para exportação .docx no browser
-- Netlify Functions como proxy da **Groq API** (chave no servidor, nunca exposta)
-- Modelo: `meta-llama/llama-4-scout-17b-16e-instruct` (gratuito, sem cartão)
+- `docx` + `file-saver` pra exportar `.docx` no browser
+- Netlify Functions como proxy da Groq API (a chave fica no servidor, nunca exposta no front)
+- Modelo: `meta-llama/llama-4-scout-17b-16e-instruct` — gratuito, sem precisar de cartão
 
-## Rodar localmente
+## Rodando local
 
 ```bash
 npm install
 ```
 
-Crie um arquivo `.env` com:
+Crie um `.env` com:
 
 ```
 GROQ_API_KEY=gsk_...
 ```
 
-Obtenha sua chave gratuita em: https://console.groq.com
+Chave gratuita em: https://console.groq.com
 
-Para testar as Netlify Functions localmente:
+Pra testar as Netlify Functions localmente:
 
 ```bash
 npm install -g netlify-cli
@@ -41,16 +41,13 @@ npm install @netlify/functions
 nlf dev
 ```
 
-## Deploy Netlify (recomendado)
+## Deploy no Netlify
 
-1. Conecte este repositório no [Netlify](https://app.netlify.com/).
+1. Conecte o repositório no [Netlify](https://app.netlify.com/)
 2. Build command: `npm run build`
 3. Publish directory: `dist`
-4. Em **Environment variables**, adicione:
-   ```
-   GROQ_API_KEY = gsk_...
-   ```
-5. Deploy!
+4. Em **Environment variables**, adicione `GROQ_API_KEY`
+5. Deploy 🚀
 
 ## Estrutura
 
@@ -58,14 +55,14 @@ nlf dev
 src/
   components/     # Tabs, JDPanel, InterviewPanel, OutreachPanel, StatusBadge, OutputActions
   lib/            # aiProvider, docxExporter, formatters, clipboard
-  prompts.ts      # Prompts mestres de cada módulo
-  schemas.ts      # JSON Schemas para Structured Outputs
+  prompts.ts      # Prompts de cada módulo
+  schemas.ts      # JSON Schemas pra Structured Outputs
   types.ts        # Tipos TypeScript
-netnlify/
+netlify/
   functions/
-    ai-proxy.ts   # Proxy serverless que chama a Groq API com a chave do servidor
+    ai-proxy.ts   # Proxy serverless que chama a Groq com a chave do servidor
 ```
 
 ---
 
-Feito com ❤️ por [juliacintral](https://github.com/juliacintral)
+Feito com ❤️ juliacintral
