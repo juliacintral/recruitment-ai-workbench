@@ -4,6 +4,31 @@ const GROQ_API_KEY = process.env.GROQ_API_KEY
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
 const DEFAULT_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct'
 
+/**
+ * Sanitiza a resposta do modelo antes de fazer JSON.parse.
+ * O Llama no Groq pode gerar newlines literais dentro de strings JSON
+ * quando o prompt usa \n\n para separar blocos (ex: outreach).
+ * Esta função escapa newlines/tabs dentro de valores string JSON.
+ */
+function sanitizeJsonString(raw: string): string {
+  // Extrai apenas o bloco JSON se vier com texto ao redor
+  const match = raw.match(/\{[\s\S]*\}/)
+  const jsonCandidate = match ? match[0] : raw
+
+  // Escapa newlines e tabs literais que estejam dentro de strings JSON
+  // (entre aspas, fora de contexto de chave/valor estrutural)
+  return jsonCandidate.replace(
+    /"((?:[^"\\]|\\.)*)"/g,
+    (_match, inner: string) => {
+      const escaped = inner
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r')
+        .replace(/\t/g, '\\t')
+      return `"${escaped}"`
+    }
+  )
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed')
 
@@ -34,11 +59,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (isStructured) {
     groqBody.response_format = { type: 'json_object' }
     const schemaName = body.text?.format?.name || 'output'
-    const schemaStr = JSON.stringify(body.text?.format?.schema || {}, null, 2)
+    const requiredFields: string[] =
+      body.text?.format?.schema?.required ?? Object.keys(body.text?.format?.schema?.properties ?? {})
     groqBody.messages = [
       {
         role: 'system',
-        content: `Responda APENAS com JSON válido seguindo exatamente o schema "${schemaName}" abaixo. Nenhum texto fora do JSON.\n\nSchema:\n${schemaStr}`
+        content: [
+          `Responda APENAS com JSON válido. Sem texto fora do JSON. Sem markdown.`,
+          `Schema: "${schemaName}"`,
+          `Campos obrigatórios: ${requiredFields.join(', ')}.`,
+          `Strings com múltiplos parágrafos devem usar \\n para quebras de linha — NUNCA quebre linhas literalmente dentro do JSON.`
+        ].join('\n')
       },
       ...messages
     ]
@@ -60,7 +91,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(response.status).json(data)
     }
 
-    const outputText: string = data.choices?.[0]?.message?.content || ''
+    const rawText: string = data.choices?.[0]?.message?.content || ''
+
+    // Sanitiza antes de retornar para evitar json_validate_failed no cliente
+    const outputText = isStructured ? sanitizeJsonString(rawText) : rawText
+
     return res.status(200).json({ output_text: outputText })
   } catch (err: any) {
     return res.status(500).json({ error: err.message })
