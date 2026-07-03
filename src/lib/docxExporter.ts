@@ -78,14 +78,14 @@ export async function exportJDToDocx(
   const brand = brandName(idioma)
   const children: Paragraph[] = []
 
-  // Logo — 120x110px
+  // Logo — 100x92px
   children.push(
     new Paragraph({
       alignment: AlignmentType.LEFT,
       children: [
         new ImageRun({
           data: logoBytes,
-          transformation: { width: 120, height: 110 },
+          transformation: { width: 100, height: 92 },
           type: 'png'
         })
       ],
