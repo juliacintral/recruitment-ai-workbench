@@ -2,7 +2,8 @@ import type { Handler } from '@netlify/functions'
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
-const DEFAULT_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct'
+// Modelo estável e atual — troque aqui se precisar atualizar futuramente
+const DEFAULT_MODEL = 'llama-3.3-70b-versatile'
 
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -12,7 +13,9 @@ export const handler: Handler = async (event) => {
   if (!GROQ_API_KEY) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'GROQ_API_KEY not configured on server.' })
+      body: JSON.stringify({
+        error: 'GROQ_API_KEY não configurada no servidor. Acesse o painel do Netlify → Site Settings → Environment Variables e adicione GROQ_API_KEY com sua chave do https://console.groq.com'
+      })
     }
   }
 
@@ -63,7 +66,11 @@ export const handler: Handler = async (event) => {
     const data = await response.json() as any
 
     if (!response.ok) {
-      return { statusCode: response.status, body: JSON.stringify(data) }
+      const groqError = data?.error?.message || JSON.stringify(data)
+      return {
+        statusCode: response.status,
+        body: JSON.stringify({ error: `Erro da API Groq (${response.status}): ${groqError}` })
+      }
     }
 
     const outputText: string = data.choices?.[0]?.message?.content || ''
@@ -76,7 +83,7 @@ export const handler: Handler = async (event) => {
   } catch (err: any) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: err.message })
+      body: JSON.stringify({ error: `Erro interno na função: ${err.message}` })
     }
   }
 }
