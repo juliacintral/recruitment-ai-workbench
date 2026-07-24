@@ -45,6 +45,15 @@ export function JDPanel({ onJDGenerated }: { onJDGenerated: (text: string) => vo
     }
   }, [cargo, cliente, especificidades, additionalContext, onJDGenerated])
 
+  // Guard seguro para exportar .docx — só exporta se jd não for null
+  const handleExportDocx = useCallback((state: LangState, langId: Language) => {
+    if (!state.jd) {
+      alert('Gere a JD antes de baixar o .docx.')
+      return
+    }
+    exportJDToDocx(state.jd, cliente, langId)
+  }, [cliente])
+
   const hasAny = pt.text || en.text
 
   return (
@@ -90,7 +99,7 @@ export function JDPanel({ onJDGenerated }: { onJDGenerated: (text: string) => vo
               <StatusBadge status={pt.status} message={pt.msg} />
               <div className="actions" style={{ margin: 0 }}>
                 <button className="btn btn-sm" onClick={() => copyToClipboard(pt.text)}>Copiar PT</button>
-                <button className="btn btn-sm" onClick={() => exportJDToDocx(pt.jd!, cliente, 'pt-BR')}>Baixar .docx PT</button>
+                <button className="btn btn-sm" onClick={() => handleExportDocx(pt, 'pt-BR')} disabled={!pt.jd}>Baixar .docx PT</button>
                 <button className="btn btn-sm" onClick={() => { onJDGenerated(pt.text) }}>Usar nas outras abas</button>
               </div>
               <pre className="output" style={{ margin: 0 }}>{pt.text}</pre>
@@ -105,7 +114,7 @@ export function JDPanel({ onJDGenerated }: { onJDGenerated: (text: string) => vo
               <StatusBadge status={en.status} message={en.msg} />
               <div className="actions" style={{ margin: 0 }}>
                 <button className="btn btn-sm" onClick={() => copyToClipboard(en.text)}>Copy EN</button>
-                <button className="btn btn-sm" onClick={() => exportJDToDocx(en.jd!, cliente, 'en')}>Download .docx EN</button>
+                <button className="btn btn-sm" onClick={() => handleExportDocx(en, 'en')} disabled={!en.jd}>Download .docx EN</button>
                 <button className="btn btn-sm" onClick={() => { onJDGenerated(en.text) }}>Use in other tabs</button>
               </div>
               <pre className="output" style={{ margin: 0 }}>{en.text}</pre>
