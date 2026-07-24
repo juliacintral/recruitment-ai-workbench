@@ -2,7 +2,8 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
-const DEFAULT_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct'
+// Modelo estável e atual — troque aqui se precisar atualizar futuramente
+const DEFAULT_MODEL = 'llama-3.3-70b-versatile'
 
 /**
  * Sanitiza a resposta do modelo antes de fazer JSON.parse.
@@ -16,7 +17,6 @@ function sanitizeJsonString(raw: string): string {
   const jsonCandidate = match ? match[0] : raw
 
   // Escapa newlines e tabs literais que estejam dentro de strings JSON
-  // (entre aspas, fora de contexto de chave/valor estrutural)
   return jsonCandidate.replace(
     /"((?:[^"\\]|\\.)*)"/g,
     (_match, inner: string) => {
@@ -33,7 +33,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed')
 
   if (!GROQ_API_KEY) {
-    return res.status(500).json({ error: 'GROQ_API_KEY not configured on server.' })
+    return res.status(500).json({
+      error: 'GROQ_API_KEY não configurada no servidor. Acesse o painel do Vercel → Settings → Environment Variables e adicione GROQ_API_KEY com sua chave do https://console.groq.com'
+    })
   }
 
   let body: any
@@ -88,7 +90,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const data = await response.json() as any
 
     if (!response.ok) {
-      return res.status(response.status).json(data)
+      const groqError = data?.error?.message || JSON.stringify(data)
+      return res.status(response.status).json({
+        error: `Erro da API Groq (${response.status}): ${groqError}`
+      })
     }
 
     const rawText: string = data.choices?.[0]?.message?.content || ''
@@ -98,6 +103,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json({ output_text: outputText })
   } catch (err: any) {
-    return res.status(500).json({ error: err.message })
+    return res.status(500).json({ error: `Erro interno na função: ${err.message}` })
   }
 }
