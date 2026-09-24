@@ -55,6 +55,9 @@ export function JDPanel({ onJDGenerated }: { onJDGenerated: (text: string) => vo
   }, [cliente])
 
   const hasAny = pt.text || en.text
+  // Mostra feedback de status mesmo quando nao ha output (ex: erro de API)
+  const showPtStatus = pt.status !== 'idle'
+  const showEnStatus = en.status !== 'idle'
 
   return (
     <section className="panel">
@@ -86,6 +89,18 @@ export function JDPanel({ onJDGenerated }: { onJDGenerated: (text: string) => vo
           {en.status === 'loading' ? 'Generating EN...' : '🇺🇸 Generate in English'}
         </button>
       </div>
+
+      {/* Status de erro/loading SEMPRE visível, mesmo sem output */}
+      {(showPtStatus && !pt.text) && (
+        <div style={{ marginTop: '12px' }}>
+          <StatusBadge status={pt.status} message={`🇧🇷 PT: ${pt.msg}`} />
+        </div>
+      )}
+      {(showEnStatus && !en.text) && (
+        <div style={{ marginTop: '12px' }}>
+          <StatusBadge status={en.status} message={`🇺🇸 EN: ${en.msg}`} />
+        </div>
+      )}
 
       {/* Outputs lado a lado quando ambos existem, empilhados quando só um */}
       {hasAny && (
